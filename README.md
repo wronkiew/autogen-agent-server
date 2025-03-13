@@ -10,8 +10,6 @@ AutoGen API Server is a lightweight and customizable server for developing conve
 - **Stateless Architecture:** Each interaction is independent, simplifying deployment and scalability.
 - **Efficient Operation:** FastAPI and uvicorn ensure efficient performance and quick response handling.
 
----
-
 ### 项目概述：AutoGen API 服务器
 
 **简介**  
@@ -23,3 +21,31 @@ AutoGen API 服务器是一款基于 Microsoft [AutoGen 0.4](https://github.com/
 - **流式和标准响应：** 同时支持流式响应（Server-Sent Events，SSE）和传统的请求-响应交互。
 - **无状态架构：** 每个交互独立进行，简化了部署过程和扩展性。
 - **高效运行：** 利用 FastAPI 和 uvicorn 提供快速响应和高效性能。
+
+---
+
+### Example agent
+
+This is an example passthrough agent. It connects `AssistantAgent` to the server.
+```python
+from registry import add_agent, get_default_model
+from autogen_agentchat.agents import AssistantAgent
+from autogen_core.models import ChatCompletionClient
+from autogen_core.model_context import ChatCompletionContext
+
+name = "hello-world"
+
+# Constructor for the 'passthrough' agent. Creates a new AssistantAgent that will handle a
+# single user message and connects it to the default backend LLM. The complete conversation
+# history is passed in and loaded by the agent.
+def create_agent(user_message: str,
+                 context: ChatCompletionContext
+                 ) -> ChatCompletionClient:
+    system_message = ( "You are a helpful assistant." )
+    model_client = get_default_model()
+    return AssistantAgent(name=name, model_client=model_client, model_client_stream=True,
+                          model_context=context, system_message=system_message)
+
+# Register this agent when the module is imported.
+add_agent(name, create_agent)
+```
