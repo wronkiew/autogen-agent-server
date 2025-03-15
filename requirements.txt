@@ -1,0 +1,6 @@
+fastapi~=0.115.11
+uvicorn~=0.34.0
+autogen-agentchat~=0.4.8
+autogen-ext[openai,web-surfer]~=0.4.8
+pydantic~=2.10.6
+pydantic-settings~=2.8.1
