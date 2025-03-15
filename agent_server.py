@@ -3,6 +3,7 @@ import uuid
 import json
 import logging
 import traceback
+import os
 from fastapi import FastAPI, Request, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
 from autogen_agentchat.base import Response as AgentResponse
@@ -211,8 +212,9 @@ async def list_models(logger: logging.Logger = Depends(get_logger)):
 
 if __name__ == "__main__":
     import uvicorn
+    current_dir = os.path.dirname(os.path.abspath(__file__))
     uvicorn.run("agent_server:app",
                 host=settings.server_host, 
                 port=settings.server_port, 
                 reload=settings.auto_reload,
-                reload_dirs=[settings.agent_dir])
+                reload_dirs=[current_dir, settings.agent_dir])
