@@ -112,7 +112,7 @@ add_agent(name, create_agent)
 
 3. **Create and Activate a Virtual Environment (Recommended)**  
    ```bash
-   python -m venv venv
+   python3.10 -m venv venv
    # On Linux/macOS:
    source venv/bin/activate
    # On Windows:
