@@ -55,7 +55,9 @@ Let's try something more interesting.
 
 ### Password
 ![](https://raw.githubusercontent.com/wronkiew/autogen-agent-server/refs/heads/main/.github/images/password_agent_demo.gif)
+
 This demonstrates tool use by `AssistantAgent`.
+
 ```python
 from registry import add_agent, get_default_model
 from autogen_agentchat.agents import AssistantAgent
@@ -96,6 +98,11 @@ def create_agent(user_message: str,
 # Register this agent when the module is imported.
 add_agent(name, create_agent)
 ```
+
+### Web surfer
+See the source at [server_agents/web_surfer_agent.py](./server_agents/web_surfer_agent.py).
+
+![](https://raw.githubusercontent.com/wronkiew/autogen-agent-server/refs/heads/main/.github/images/web_surfer_agent_demo.gif)
 
 ---
 
