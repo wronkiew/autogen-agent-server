@@ -88,6 +88,7 @@ def web_surf(instructions: str) -> str:
     """
     Given a plain-text request, use a web browser to perform actions and provide a
     text response. Instructions should include any actions that need to be taken.
+    This can interact directly with website controls.
     """
     return asyncio.run(async_web_surf(instructions))
 
