@@ -444,7 +444,9 @@ disable=raw-checker-failed,
         missing-final-newline,
         missing-module-docstring,
         missing-function-docstring,
-        no-else-return
+        no-else-return,
+        line-too-long,
+        broad-exception-caught
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

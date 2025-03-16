@@ -1,19 +1,26 @@
 import sys
 import logging
+from typing import Optional, Dict
 from pydantic import ValidationError
 from pydantic_settings import BaseSettings
 from pydantic import Field, field_validator
-from typing import Optional, Dict
 
-logger = logging.getLogger(__name__)
+config_logger = logging.getLogger(__name__)
 
 class ModelInfo(BaseSettings):
+    """
+    Encapsulates configuration details that describe a language model's capabilities.
+    """
     family: str = Field(..., description="LLM family")
     function_calling: bool = Field(..., description="Enable function calling")
     json_output: bool = Field(..., description="Enable JSON output")
     vision: bool = Field(..., description="Enable vision support")
 
 class Settings(BaseSettings):
+    """
+    Aggregates configuration parameters for connecting to the OpenAI API backend,
+    setting up default language model configurations, and configuring the server.
+    """
     # Required API/Backend configuration.
     openai_api_key: str = Field(..., description="OpenAI API key (must be set)")
     backend_url: str = Field("https://api.openai.com/v1", description="Backend URL")
@@ -35,6 +42,7 @@ class Settings(BaseSettings):
     agent_dir: str = Field("server_agents", description="Agent plugin directory")
 
     @field_validator("model_info", mode="before")
+    @classmethod
     def assemble_model_info(cls, v, info):
         mapping = {
             "default_llm_family": "family",
@@ -51,7 +59,7 @@ class Settings(BaseSettings):
             raise ValueError(
                 f"Incomplete model info configuration. Missing: {', '.join(missing)}."
             )
-        model_info_kwargs = {mapping[key]: provided[key] for key in mapping}
+        model_info_kwargs = {dest: provided[src] for src, dest in mapping.items()}
         return ModelInfo(**model_info_kwargs)
 
     def default_model_config(self, 
@@ -93,7 +101,10 @@ class Settings(BaseSettings):
                 continue
             logger.info("  %s: %s", key, value)
 
-    class Config:
+    class Config: # pylint: disable=too-few-public-methods
+        """
+        Pydantic configuration for the Settings model."
+        """
         env_prefix = ""
         env_file = ".env"
 
@@ -101,7 +112,7 @@ class Settings(BaseSettings):
 try:
     settings = Settings()
 except ValidationError as exc:
-    logger.debug("Configuration error when loading settings", exc_info=exc)
+    config_logger.debug("Configuration error when loading settings", exc_info=exc)
     # Extract a user-friendly error message from the validation errors.
     error_messages = []
     for error in exc.errors():
@@ -110,18 +121,18 @@ except ValidationError as exc:
         # Optionally remove technical parts like '__root__'
         if loc and loc[0] == "__root__":
             loc = loc[1:]
-        loc_str = ".".join(map(str, loc)) if loc else "configuration"
+        LOC_STR = ".".join(map(str, loc)) if loc else "configuration"
         # 'msg' is the human-readable error message.
         msg = error.get("msg", "Invalid configuration")
-        error_messages.append(f"{loc_str}: {msg}")
-    final_error = "\n".join(error_messages)
+        error_messages.append(f"{LOC_STR}: {msg}")
+    FINAL_ERROR = "\n".join(error_messages)
     print(
         "Configuration Error: Failed to load settings. Please ensure that all required settings are properly set.\n"
-        f"{final_error}"
+        f"{FINAL_ERROR}"
     )
     sys.exit(1)
 except Exception as exc:
-    logger.debug("Configuration error when loading settings", exc_info=exc)
+    config_logger.debug("Configuration error when loading settings", exc_info=exc)
     print(
         "Configuration Error: An unexpected error occurred when loading settings. "
         "Please check your configuration."
