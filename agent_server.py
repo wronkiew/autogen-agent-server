@@ -4,6 +4,7 @@ import json
 import logging
 import traceback
 import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
 from autogen_agentchat.base import Response as AgentResponse
@@ -11,12 +12,11 @@ from autogen_agentchat.messages import ChatMessage, TextMessage, ModelClientStre
 from autogen_core import CancellationToken, TRACE_LOGGER_NAME
 from autogen_core.model_context import UnboundedChatCompletionContext
 from autogen_core.models import AssistantMessage, SystemMessage, UserMessage
-from contextlib import asynccontextmanager
 from registry import get_agent, list_agents, load_agent_files, get_logger
 from config import settings
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     logging.basicConfig(level=logging.WARNING)
     autogen_logger = logging.getLogger(TRACE_LOGGER_NAME)
     autogen_logger.addHandler(logging.StreamHandler())
@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
     settings.log_config(logger)
     logger.info("Loaded agents:")
     for name in list_agents():
-        logger.info(f"  {name}")
+        logger.info("  %s", name)
 
     yield
 
@@ -51,7 +51,7 @@ async def stream_response(agent, user_message: ChatMessage, model_name: str,
             async for item in agent.on_messages_stream([user_message], CancellationToken()):
                 create_time = int(time.time())
                 logger.debug(f"sse_stream item {type(item).__name__}: {item}")
-                if isinstance(item, ModelClientStreamingChunkEvent) or isinstance(item, TextMessage):
+                if isinstance(item, (ModelClientStreamingChunkEvent, TextMessage)):
                     chunk_dict = {
                         "id": completion_id,
                         "object": "chat.completion.chunk",
@@ -94,6 +94,7 @@ async def stream_response(agent, user_message: ChatMessage, model_name: str,
 
                     # Sentinel for completion.
                     yield "data: [DONE]\n\n"
+        # pylint: disable=W0718
         except Exception as exc:
             logger.error(f"Error during streaming response: {type(exc).__name__} {exc}")
             stack_trace = traceback.format_exc()
@@ -110,6 +111,7 @@ async def complete_response(agent, user_message: ChatMessage, model_name: str,
     try:
         # Call the agent's on_messages function to get a full response
         response = await agent.on_messages([user_message], CancellationToken())
+    # pylint: disable=W0718
     except Exception as exc:
         logger.error("Error during response: %s", exc)
         return {"error": "Internal server error."}
@@ -117,7 +119,7 @@ async def complete_response(agent, user_message: ChatMessage, model_name: str,
     completion_id = f"chatcmpl-{uuid.uuid4().hex}"
     prompt_tokens = 0
     completion_tokens = 0
-    if (response.chat_message.models_usage):
+    if response.chat_message.models_usage:
         models_usage = response.chat_message.models_usage
         prompt_tokens = models_usage.prompt_tokens
         completion_tokens = models_usage.completion_tokens
