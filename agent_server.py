@@ -112,7 +112,7 @@ async def complete_response(agent, user_message: ChatMessage, model_name: str,
         response = await agent.on_messages([user_message], CancellationToken())
     except Exception as exc:
         logger.error("Error during response: %s", exc)
-        return {"error": f"Internal server error."}
+        return {"error": "Internal server error."}
     created_time = int(time.time())
     completion_id = f"chatcmpl-{uuid.uuid4().hex}"
     prompt_tokens = 0
@@ -191,8 +191,7 @@ async def chat_completions(request: Request, logger: logging.Logger = Depends(ge
     # Process based on whether streaming is enabled.
     if stream:
         return await stream_response(agent, user_message, model_name, logger)
-    else:
-        return await complete_response(agent, user_message, model_name, logger)
+    return await complete_response(agent, user_message, model_name, logger)
 
 @app.get("/v1/models")
 async def list_models(logger: logging.Logger = Depends(get_logger)):

@@ -13,7 +13,7 @@ name = "web_surfer"
 
 # --------------------------------------------------------------------------
 # async_web_surf
-# 
+#
 # Asyncrhonous helper function for the web_surf tool. Performs a web-
 # browsing session, followed by summarizing the results.
 # --------------------------------------------------------------------------
@@ -21,7 +21,7 @@ async def async_web_surf(instructions: str) -> str:
     logger = get_logger()
     logger.debug(f"web_surf instructions: {instructions}")
 
-    # Switch to a less expensive LLM if the default is gpt-4o, 
+    # Switch to a less expensive LLM if the default is gpt-4o,
     # because real-time web browsing can use a lot of tokens.
     browsing_llm = settings.default_llm
     if browsing_llm == "gpt-4o":
@@ -62,7 +62,7 @@ async def async_web_surf(instructions: str) -> str:
         system_message=summarize_instructions
     )
 
-    # Extract the browser session messages and append a user-like instruction 
+    # Extract the browser session messages and append a user-like instruction
     # requesting a thorough summary including source URLs.
     web_answer = web_answer.messages
     summarize_request = (
@@ -80,8 +80,8 @@ async def async_web_surf(instructions: str) -> str:
 
 # --------------------------------------------------------------------------
 # web_surf
-# 
-# A synchronous wrapper around the async_web_surf function. The docstring 
+#
+# A synchronous wrapper around the async_web_surf function. The docstring
 # is sent as the description of the tool to the top-level agent.
 # --------------------------------------------------------------------------
 def web_surf(instructions: str) -> str:
@@ -94,7 +94,7 @@ def web_surf(instructions: str) -> str:
 
 # --------------------------------------------------------------------------
 # create_agent
-# 
+#
 # Called by the server when an incoming request selects "web_surfer" as the agent model.
 # --------------------------------------------------------------------------
 def create_agent(user_message: str, context: ChatCompletionContext) -> ChatCompletionClient:
@@ -109,9 +109,9 @@ def create_agent(user_message: str, context: ChatCompletionContext) -> ChatCompl
             model_context=context
         )
 
-    # For standard usage, this returns a web surfer agent that can call the `web_surf` function 
+    # For standard usage, this returns a web surfer agent that can call the `web_surf` function
     # to handle interactive browsing. The system_message instructs the agent to describe problems
-    # and include web links in the final output. reflect_on_tool_use=True instructs the agent 
+    # and include web links in the final output. reflect_on_tool_use=True instructs the agent
     # to do a second pass after tool usage, refining its final text response.
     system_message = (
         "Use tools to assist the user. Provide detailed information about "
