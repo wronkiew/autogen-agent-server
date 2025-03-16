@@ -18,7 +18,7 @@ async def get_secret(password: str) -> str:
     if remove_punctuation(password) == "bapple":
         return "The secret word is 'stawberry'"
     else:
-        raise Exception("Incorrect password")
+        raise ValueError("Incorrect password")
 
 # Constructor for the 'password' agent. Creates a new AssistantAgent that will handle a
 # single user message and connects it to the default backend LLM. The complete conversation

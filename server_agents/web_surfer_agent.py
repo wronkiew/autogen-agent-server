@@ -1,5 +1,4 @@
 import asyncio
-from config import settings
 from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.messages import TextMessage
 from autogen_agentchat.teams import RoundRobinGroupChat
@@ -7,6 +6,7 @@ from autogen_ext.agents.web_surfer import MultimodalWebSurfer
 from autogen_core import CancellationToken
 from autogen_core.models import ChatCompletionClient
 from autogen_core.model_context import ChatCompletionContext
+from config import settings
 from registry import add_agent, get_default_model, get_logger
 
 NAME = "web_surfer"
