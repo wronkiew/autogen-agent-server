@@ -1,5 +1,4 @@
 import asyncio
-from registry import add_agent, get_default_model, get_logger
 from config import settings
 from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.messages import TextMessage
@@ -8,8 +7,9 @@ from autogen_ext.agents.web_surfer import MultimodalWebSurfer
 from autogen_core import CancellationToken
 from autogen_core.models import ChatCompletionClient
 from autogen_core.model_context import ChatCompletionContext
+from registry import add_agent, get_default_model, get_logger
 
-name = "web_surfer"
+NAME = "web_surfer"
 
 # --------------------------------------------------------------------------
 # async_web_surf
@@ -19,7 +19,7 @@ name = "web_surfer"
 # --------------------------------------------------------------------------
 async def async_web_surf(instructions: str) -> str:
     logger = get_logger()
-    logger.debug(f"web_surf instructions: {instructions}")
+    logger.debug("web_surf instructions: %s", instructions)
 
     # Switch to a less expensive LLM if the default is gpt-4o,
     # because real-time web browsing can use a lot of tokens.
@@ -47,7 +47,7 @@ async def async_web_surf(instructions: str) -> str:
 
     # Execute the browsing session, capturing the resulting messages/outputs.
     web_answer = await team.run(task=instructions)
-    logger.debug(f"web_surf answer: {web_answer}")
+    logger.debug("web_surf answer: %s", web_answer)
 
     # Create a second model client for summarizing the browser session results.
     summarize_client = ChatCompletionClient.load_component(
@@ -75,7 +75,7 @@ async def async_web_surf(instructions: str) -> str:
     # Ask the summarizing agent to process all browsing steps and produce a final summary string.
     summary_response = await summarize_agent.on_messages(web_answer, CancellationToken())
     summary = summary_response.chat_message.content
-    logger.debug(f"summarize answer: {summary}")
+    logger.debug("summarize answer: %s", summary)
     return summary
 
 # --------------------------------------------------------------------------
@@ -120,7 +120,7 @@ def create_agent(user_message: str, context: ChatCompletionContext) -> ChatCompl
         "links to any web browsing results."
     )
     return AssistantAgent(
-        name=name,
+        name=NAME,
         model_client=model_client,
         model_client_stream=True,
         model_context=context,
@@ -130,4 +130,4 @@ def create_agent(user_message: str, context: ChatCompletionContext) -> ChatCompl
     )
 
 # Register this agent in the global agent registry, so the server can discover and use it.
-add_agent(name, create_agent)
+add_agent(NAME, create_agent)

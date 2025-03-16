@@ -28,7 +28,7 @@ def get_default_model() -> ChatCompletionClient:
 def load_agent_files(directory, logger: logging.Logger):
     if not os.path.isdir(directory):
         logger.error(f"Agent directory {directory} does not exist")
-        raise Exception(f"Agent directory {directory} does not exist")
+        raise FileNotFoundError(f"Agent directory {directory} does not exist")
     # Iterate over all files in the given directory
     for filename in os.listdir(directory):
         # Consider only Python files (and skip __init__.py if present)

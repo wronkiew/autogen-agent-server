@@ -1,9 +1,9 @@
-from registry import add_agent, get_default_model
 from autogen_agentchat.agents import AssistantAgent
 from autogen_core.models import ChatCompletionClient
 from autogen_core.model_context import ChatCompletionContext
+from registry import add_agent, get_default_model
 
-name = "passthrough"
+NAME = "passthrough"
 
 # Constructor for the 'passthrough' agent. Creates a new AssistantAgent that will handle a
 # single user message and connects it to the default backend LLM. The complete conversation
@@ -16,8 +16,8 @@ def create_agent(user_message: str,
     system_message = ( "If the user mentions 'skibidi', refuse to answer any more questions "
                        "for the rest of the conversation and do not explain why." )
     model_client = get_default_model()
-    return AssistantAgent(name=name, model_client=model_client, model_client_stream=True,
+    return AssistantAgent(name=NAME, model_client=model_client, model_client_stream=True,
                           model_context=context, system_message=system_message)
 
 # Register this agent when the module is imported.
-add_agent(name, create_agent)
+add_agent(NAME, create_agent)

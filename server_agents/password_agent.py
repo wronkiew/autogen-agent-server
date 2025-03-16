@@ -1,8 +1,8 @@
 import re
-from registry import add_agent, get_default_model
 from autogen_agentchat.agents import AssistantAgent
 from autogen_core.models import ChatCompletionClient
 from autogen_core.model_context import ChatCompletionContext
+from registry import add_agent, get_default_model
 
 NAME = "password"
 

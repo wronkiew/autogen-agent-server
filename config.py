@@ -1,9 +1,8 @@
 import sys
 import logging
 from typing import Optional, Dict
-from pydantic import ValidationError
+from pydantic import ValidationError, Field, field_validator
 from pydantic_settings import BaseSettings
-from pydantic import Field, field_validator
 
 config_logger = logging.getLogger(__name__)
 
