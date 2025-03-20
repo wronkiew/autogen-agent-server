@@ -117,7 +117,7 @@ def is_simple_type(field_type: type) -> bool:
     return field_type in (str, int, float, bool)
 
 # Helper: add a field to the argparse parser
-def add_field_to_parser(arg_parser: argparse.ArgumentParser, field_name: str, field, default_value):
+def add_field_to_parser(_parser: argparse.ArgumentParser, field_name: str, field, default_value):
     field_type = field.annotation
     origin = get_origin(field_type)
     if origin is Union:
@@ -143,23 +143,23 @@ def add_field_to_parser(arg_parser: argparse.ArgumentParser, field_name: str, fi
                 return False
             else:
                 raise argparse.ArgumentTypeError("Boolean value expected (true/false).")
-        arg_parser.add_argument(f"--{field_name}", type=str_to_bool, default=suppress_default,
+        _parser.add_argument(f"--{field_name}", type=str_to_bool, default=suppress_default,
                             help=f"{description} (bool) (default: {default_value})")
     else:
-        arg_parser.add_argument(f"--{field_name}", type=field_type, default=suppress_default,
+        _parser.add_argument(f"--{field_name}", type=field_type, default=suppress_default,
                             help=f"{description} (default: {default_value})")
 
 # Generate an argparse parser automatically from the Settings model.
 def generate_arg_parser_from_settings(settings_cls: type[BaseSettings]) -> argparse.ArgumentParser:
-    arg_parser = argparse.ArgumentParser(
+    _parser = argparse.ArgumentParser(
         description="Agent Server Configuration",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     for field_name, field in settings_cls.model_fields.items():
         if field_name == "model_info":
             continue
-        add_field_to_parser(arg_parser, field_name, field, field.default)
-    return arg_parser
+        add_field_to_parser(_parser, field_name, field, field.default)
+    return _parser
 
 # Load the settings once.
 try:
