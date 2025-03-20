@@ -20,14 +20,14 @@ async def lifespan(_app: FastAPI):
     logging.basicConfig(level=logging.WARNING)
     autogen_logger = logging.getLogger(TRACE_LOGGER_NAME)
     autogen_logger.addHandler(logging.StreamHandler())
-    autogen_logger.setLevel(logging.INFO)
+    autogen_logger.setLevel(logging.DEBUG if settings.autogen_debug_log else logging.INFO)
 
     logging.getLogger("httpcore").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("openai").setLevel(logging.WARNING)
 
     logger = get_logger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG if settings.debug_log else logging.INFO)
 
     load_agent_files(settings.agent_dir, logger)
 

@@ -37,7 +37,7 @@ async def async_web_surf(instructions: str) -> str:
     web_surfer_agent = MultimodalWebSurfer(
         "web_surfer",
         model_client,
-        headless=False,
+        headless=settings.headless,
         animate_actions=True
     )
 

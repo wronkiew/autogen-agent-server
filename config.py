@@ -1,6 +1,7 @@
+import argparse
 import sys
 import logging
-from typing import Optional, Dict
+from typing import Optional, Dict, get_origin, get_args, Union
 from pydantic import ValidationError, Field, field_validator
 from pydantic_settings import BaseSettings
 
@@ -39,6 +40,11 @@ class Settings(BaseSettings):
     auto_reload: bool = Field(False, description="Enable auto-reload")
 
     agent_dir: str = Field("server_agents", description="Agent plugin directory")
+
+    debug_log: bool = Field(False, description="Enable debug logging for the agent server")
+    autogen_debug_log: bool = Field(False, description="Enable debug logging for AutoGen")
+
+    headless: bool = Field(False, description="Disable program elements requiring a display")
 
     @field_validator("model_info", mode="before")
     @classmethod
@@ -95,39 +101,85 @@ class Settings(BaseSettings):
             config_dict["openai_api_key"] = "****"
         logger.info("Loaded configuration settings:")
         for key, value in config_dict.items():
-            # Skip derived settings
             if key in ["model_info"]:
                 continue
             logger.info("  %s: %s", key, value)
 
-    class Config: # pylint: disable=too-few-public-methods
+    class Config:
         """
-        Pydantic configuration for the Settings model."
+        Pydantic configuration for the Settings model.
         """
         env_prefix = ""
         env_file = ".env"
 
-# Wrap instantiation in a try/except to catch configuration issues.
+# Helper: decide if a type is "simple" (i.e. str, int, float, bool)
+def is_simple_type(field_type: type) -> bool:
+    return field_type in (str, int, float, bool)
+
+# Helper: add a field to the argparse parser
+def add_field_to_parser(parser: argparse.ArgumentParser, field_name: str, field, default_value):
+    field_type = field.annotation
+    origin = get_origin(field_type)
+    if origin is Union:
+        args = get_args(field_type)
+        non_none = [arg for arg in args if arg is not type(None)]
+        if len(non_none) == 1:
+            field_type = non_none[0]
+    if not is_simple_type(field_type):
+        return
+
+    description = field.description or ""
+    # Use argparse.SUPPRESS for the default value so that if the flag is not provided,
+    # the key will not be present in the parsed arguments.
+    suppress_default = argparse.SUPPRESS
+
+    if field_type is bool:
+        def str_to_bool(v):
+            if isinstance(v, bool):
+                return v
+            if v.lower() in ("true", "1", "yes"):
+                return True
+            elif v.lower() in ("false", "0", "no"):
+                return False
+            else:
+                raise argparse.ArgumentTypeError("Boolean value expected (true/false).")
+        parser.add_argument(f"--{field_name}", type=str_to_bool, default=suppress_default,
+                            help=f"{description} (bool) (default: {default_value})")
+    else:
+        parser.add_argument(f"--{field_name}", type=field_type, default=suppress_default,
+                            help=f"{description} (default: {default_value})")
+
+# Generate an argparse parser automatically from the Settings model.
+def generate_arg_parser_from_settings(settings_cls: type[BaseSettings]) -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Agent Server Configuration",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    for field_name, field in settings_cls.model_fields.items():
+        if field_name == "model_info":
+            continue
+        add_field_to_parser(parser, field_name, field, field.default)
+    return parser
+
+# Load the settings once.
 try:
-    settings = Settings()
+    parser = generate_arg_parser_from_settings(Settings)
+    args = parser.parse_args()
+    settings = Settings(**vars(args))
 except ValidationError as exc:
     config_logger.debug("Configuration error when loading settings", exc_info=exc)
-    # Extract a user-friendly error message from the validation errors.
     error_messages = []
     for error in exc.errors():
-        # 'loc' is a tuple indicating where the error occurred.
         loc = error.get("loc", [])
-        # Optionally remove technical parts like '__root__'
         if loc and loc[0] == "__root__":
             loc = loc[1:]
-        LOC_STR = ".".join(map(str, loc)) if loc else "configuration"
-        # 'msg' is the human-readable error message.
+        loc_str = ".".join(map(str, loc)) if loc else "configuration"
         msg = error.get("msg", "Invalid configuration")
-        error_messages.append(f"{LOC_STR}: {msg}")
-    FINAL_ERROR = "\n".join(error_messages)
+        error_messages.append(f"{loc_str}: {msg}")
+    final_error = "\n".join(error_messages)
     print(
         "Configuration Error: Failed to load settings. Please ensure that all required settings are properly set.\n"
-        f"{FINAL_ERROR}"
+        f"{final_error}"
     )
     sys.exit(1)
 except Exception as exc:

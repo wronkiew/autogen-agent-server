@@ -154,3 +154,44 @@ See the source at [server_agents/web_surfer_agent.py](./server_agents/web_surfer
    python agent_server.py
    ```
    The server will start based on the settings from your `.env` file (e.g., `http://127.0.0.1:11435` by default if no port is specified). You can now interact with the API or connect any OpenAI-compatible frontend.
+
+## Docker
+
+This project includes a Dockerfile to containerize the application. Follow the instructions below to build and run the Docker container.
+
+### Building the Docker Image
+
+From the project root, build the Docker image with:
+
+```bash
+docker build -t autogen-agent-server .
+```
+
+### Running the Docker Container
+
+Mount a host directory into the container for your agents. For example, if your host agents directory is located at `/path/to/your/agents`, run:
+
+```bash
+docker run -d --name agent-server -p 11435:11435 \
+  -v /path/to/your/agents:/app/server_agents \
+  autogen-agent-server
+```
+
+- **Volume Mount:**  
+  `-v /path/to/your/agents:/app/agents` mounts your host’s agents directory to `/app/server_agents` inside the container.
+
+This setup allows you to manage agent files on your host system while the container uses them at runtime.
+
+### Passing Environment Variables from a `.env` File
+
+If you have a `.env` file with configuration variables (e.g., `OPENAI_API_KEY`, `SERVER_HOST`, etc.), you can pass these to the container using the `--env-file` option. For example, if your `.env` file is located in the project root, run:
+
+```bash
+docker run -d --name agent-server -p 11435:11435 \
+  --env-file .env \
+  -v /path/to/your/agents:/app/server_agents \
+  autogen-agent-server
+```
+
+- **Environment Variables:**  
+  The `--env-file .env` flag loads all the environment variables defined in your `.env` file into the container.
